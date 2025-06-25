@@ -1,9 +1,7 @@
--- 创建数据库
-CREATE DATABASE IF NOT EXISTS ckgl;
-USE ckgl;
-
--- 首先创建基础表(没有外键依赖的表)
--- 创建商品分类表
+-- 创建基础表(没有外键依赖的表)
+-- 商品分类表
+create database ckgl;
+use ckgl;
 CREATE TABLE IF NOT EXISTS goodstype (
                                          id INT NOT NULL AUTO_INCREMENT COMMENT '主键',
                                          name VARCHAR(100) NOT NULL COMMENT '分类名',
@@ -11,7 +9,7 @@ CREATE TABLE IF NOT EXISTS goodstype (
                                          PRIMARY KEY (id)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
--- 创建仓库表
+-- 仓库表
 CREATE TABLE IF NOT EXISTS storage (
                                        id INT NOT NULL AUTO_INCREMENT COMMENT '主键',
                                        name VARCHAR(100) NOT NULL COMMENT '仓库名',
@@ -19,7 +17,7 @@ CREATE TABLE IF NOT EXISTS storage (
                                        PRIMARY KEY (id)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
--- 创建用户表
+-- 用户表
 CREATE TABLE IF NOT EXISTS user (
                                     id INT NOT NULL AUTO_INCREMENT COMMENT '主键',
                                     no VARCHAR(20) NULL DEFAULT NULL COMMENT '账号',
@@ -33,7 +31,7 @@ CREATE TABLE IF NOT EXISTS user (
                                     PRIMARY KEY (id)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
--- 创建菜单表
+-- 菜单表
 CREATE TABLE IF NOT EXISTS menu (
                                     id INT NOT NULL,
                                     menuCode VARCHAR(8) NULL DEFAULT NULL COMMENT '菜单编码',
@@ -47,13 +45,14 @@ CREATE TABLE IF NOT EXISTS menu (
                                     PRIMARY KEY (id)
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
--- 创建商品表(依赖goodstype和storage)
+-- 商品表(包含wholesale_price字段)
 CREATE TABLE IF NOT EXISTS goods (
                                      id INT NOT NULL AUTO_INCREMENT COMMENT '主键',
                                      name VARCHAR(100) NOT NULL COMMENT '货名',
                                      storage INT NOT NULL COMMENT '仓库',
                                      goodsType INT NOT NULL COMMENT '分类',
                                      count INT NULL DEFAULT NULL COMMENT '数量',
+                                     wholesale_price DECIMAL(10,2) NULL DEFAULT NULL COMMENT '批发价',
                                      remark VARCHAR(1000) NULL DEFAULT NULL COMMENT '备注',
                                      PRIMARY KEY (id),
                                      CONSTRAINT fk_goods_goodstype FOREIGN KEY (goodsType)
@@ -61,11 +60,8 @@ CREATE TABLE IF NOT EXISTS goods (
                                      CONSTRAINT fk_goods_storage FOREIGN KEY (storage)
                                          REFERENCES storage(id) ON DELETE RESTRICT ON UPDATE CASCADE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
-ALTER TABLE goods
-    ADD COLUMN wholesale_price DECIMAL(10,2) NULL COMMENT '批发价' AFTER count;
 
-
--- 创建记录表(依赖goods和user)
+-- 记录表
 CREATE TABLE IF NOT EXISTS record (
                                       id INT NOT NULL AUTO_INCREMENT COMMENT '主键',
                                       goods INT NOT NULL COMMENT '货品id',
@@ -83,7 +79,7 @@ CREATE TABLE IF NOT EXISTS record (
                                           REFERENCES user(id) ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci;
 
--- 创建通告表(无外键依赖)
+-- 通告表
 CREATE TABLE IF NOT EXISTS notice (
                                       id INT AUTO_INCREMENT PRIMARY KEY,
                                       title VARCHAR(100) NOT NULL COMMENT '通告标题',
@@ -139,15 +135,20 @@ INSERT INTO menu VALUES
                      (6, '006', '记录管理', '1', NULL, 'Record', '0,1,2', 'record/RecordManage', 'el-icon-s-order'),
                      (7,'007','数据可视化','1',NULL,'visualization','0,1,2','visualization/visualization.vue','el-icon-s-order'),
                      (8,'008','通告','1',NULL,'information','0,1,2','Information/information.vue','el-icon-s-order');
--- 商品数据
+
+-- 商品数据（包含wholesale_price字段）
 INSERT INTO goods VALUES
-                      (1, 'iPhone14', 2, 2, 100, '货物不可以挤压',6000),
-                      (4, '洁面乳', 1, 1, 1000, '货物不可以挤压',50),
-                      (5, '葡萄', 5, 5, 500, '货物不可以挤压',40),
-                      (6, '西红柿', 5, 6, 800, '货物不可以挤压',10),
-                      (7, '皮皮虾', 4, 4, 500, '货物不可以挤压',60),
-                      (8, 'AD钙', 3, 3, 400, '货物不可以挤压',10),
-                      (11, 'iPad Air5', 2, 2, 800, '货物不可以挤压',8000);
+                      (1, 'iPhone15', 2, 2, 1100, 6999.00, '货物不可以挤压'),
+                      (2, 'MacBook Pro', 2, 2, 50, 12999.00, '贵重物品小心搬运'),
+                      (3, '洗发水', 1, 1, 500, 45.50, '日用品'),
+                      (4, '冷冻饺子', 4, 4, 200, 25.80, '需冷冻保存'),
+                      (5, '苹果', 5, 5, 300, 8.50, '新鲜水果'),
+                      (6, '西红柿', 5, 6, 150, 3.20, '蔬菜'),
+                      (7, '皮皮虾', 7, 4, 100, 68.00, '海鲜'),
+                      (8, 'AD钙奶', 3, 3, 400, 2.50, '饮品'),
+                      (9, 'T恤', 6, 1, 250, 79.00, '服装'),
+                      (10, 'iPad', 2, 2, 80, 3499.00, '平板电脑'),
+                      (11, 'iPad Air5', 2, 2, 800, 8000.00, '货物不可以挤压');
 
 -- 记录数据
 INSERT INTO record VALUES
@@ -157,7 +158,6 @@ INSERT INTO record VALUES
                        (4, 6, 5, 8, 120, '2025-06-06 20:49:57', '补货'),
                        (5, 11, 6, 2, 50, '2025-06-06 20:50:20', '取货');
 
-
-
+-- 通告数据
 INSERT INTO notice VALUES
-                       (1,'欢迎使用仓库管理系统','有合作需要请联系电话18323~~~申请账号','超级管理员','2025-06-24 19:47:21',1);
+    (1, '欢迎使用仓库管理系统', '有合作需要请联系电话18323~~~申请账号', '超级管理员', '2025-06-24 19:47:21', 1);
